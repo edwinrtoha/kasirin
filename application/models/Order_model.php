@@ -32,29 +32,42 @@
             unset($data["order"]["tanggal"]);
             $this->db->trans_begin();
             $this->db->trans_strict(FALSE);
-            $query="CREATE TABLE IF NOT EXISTS order_$tahun (order_id int(10) UNSIGNED NOT NULL AUTO_INCREMENT, customer_id varchar(16) NOT NULL, take_away tinyint(1) NOT NULL, gofood tinyint(1) NOT NULL, grabfood tinyint(1) NOT NULL, driver_id varchar(16) NOT NULL, tanggal timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (order_id)) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+            $query="CREATE TABLE IF NOT EXISTS order_$tahun (order_id int(10) UNSIGNED NOT NULL AUTO_INCREMENT, customer_id varchar(16) NOT NULL, take_away tinyint(1) NOT NULL, gofood tinyint(1) NOT NULL, grabfood tinyint(1) NOT NULL, driver_id varchar(16) NOT NULL, tanggal timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (order_id)) ENGINE=InnoDB DEFAULT CHARSET=latin1;"; // Membuat table order_$tahun jika belum ada table order untuk tahun tersebut
 
             
             $this->db->query($query);
 
-            $query="CREATE TABLE IF NOT EXISTS order_items_$tahun (order_id int(11) NOT NULL, menu_id int(11) NOT NULL, qty int(11) NOT NULL, keterangan longtext NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+            $query="CREATE TABLE IF NOT EXISTS order_items_$tahun (order_id int(11) NOT NULL, menu_id int(11) NOT NULL, qty int(11) NOT NULL, keterangan longtext NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;"; // order_items_$tahun jika belum ada table order_items untuk tahun tersebut
 
             $this->db->query($query);
 
             $this->db->insert('order_'.$tahun,$data['order']);
             $order_id=$this->db->insert_id();
+            $customer_id=$data["order"]["customer_id"];
+            $this->db->query("INSERT IGNORE INTO customer (customer_id) VALUES ('$customer_id')");
+
             for ($i=0; $i < sizeof($data["order_items"]) ; $i++) {
-                if(isset($order_items[$i]) && is_array($order_items[$i])){
-                    $data["order_items"][$i]["order_id"]=$order_id;
-                    $this->db->insert('order_item_' + $tahun,$data['order_items'][$i]);
-                }
+                $data["order_items"][$i]["order_id"]=$order_id;
+                $this->db->insert('order_items_'.$tahun,$data['order_items'][$i]);
             }
 
             if ($this->db->trans_status() == FALSE){
                 $this->db->trans_rollback();
+                return 0;
             }
             else{
                 $this->db->trans_commit();
+                return 1;
+            }
+        }
+
+        public function getOrder($param){
+            if(is_array($param)){
+                if(isset($param["tahun"])){
+                    $tahun=$param["tahun"];
+                    unset($param["tahun"]);
+                    $this->db->get('order_'.$tahun,$param)
+                }
             }
         }
         public function menu($param=""){

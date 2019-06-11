@@ -24,7 +24,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |
 */
 $config['domain']=$_SERVER['HTTP_HOST'];
-$config['base_url'] = 'http://'.$config['domain'].'/kasir.in';
+$config['base_url'] = 'http://'.$config['domain'].'/Kasir.in';
 $config['site_title']='Kasirin';
 
 /*
